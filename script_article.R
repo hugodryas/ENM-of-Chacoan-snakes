@@ -1330,3 +1330,212 @@ ggsave("Figures/Barplots.png", plot=Barplot, width=5, height=7, units="in", bg =
 ggsave("Figures/Barplots.pdf", plot=Barplot, width=5, height=7, units="in", bg = "transparent")
 
 #####
+
+
+# Step 11 - Compute Functional diversity
+#######################################################################################################################################
+# Paso 11 - Calcular diversidad funcional
+
+getwd()
+setwd("D:/Hugo/Data")
+
+#Load packages
+library(mFD)
+library(ape)
+library(picante)
+
+
+#localidade x espécie
+PAM_Wide<-fread(file = file.choose(), stringsAsFactors=FALSE, encoding="UTF-8")
+head(PAM_Wide[,1:10])
+
+
+#tabela de atributo das espécies
+divf <- read.table(file.choose(), sep = "\t", header = T)#LISTA DE ATRIBUTOS
+head(divf)
+summary(divf)
+row.names(divf)
+colnames(divf)
+
+#Descrição tipo das variáveis de atributos
+tipovar <- read.table(file.choose(), sep = "\t", header = T)#Tipo de variável
+summary(tipovar)
+tipovar
+
+
+### Compute functional diversity indexes ###
+############################################
+
+
+# Summary of the assemblages * species dataframe:
+
+com_sum<-mFD::asb.sp.summary(PAM_Wide)
+com_sum$asb_sp_occ #Species occurrences
+com_sum$sp_tot_w #Species total abundance
+com_sum$asb_tot_w #Total abundance per assemblage
+com_sum$asb_sp_richn #Species richness per assemblage
+
+# Computing distances between species based on functional traits
+sp_dist<-mFD::funct.dist(sp_tr = divf,tr_cat = tipovar, metric = "gower")
+
+
+class(sp_dist)
+head(sp_dist)
+save(sp_dist, "sp_dist.RData")
+write.csv(sp_dist, "Func_dist.csv")
+
+#Compute multimensional functional spaces and assess their quality
+fspaces_quality<-mFD::quality.fspaces(sp_dist, 10,deviation_weighting = c("absolute"), fdendro = "average")
+fspaces_quality4<-mFD::quality.fspaces(sp_dist, 4,deviation_weighting = c("absolute"), fdendro = "average")
+fspaces_quality$quality_fspaces #Quality metrics of spaces - The space with the best quality has the lowest quality metric
+sp_faxes_coord <- fspaces_quality$"details_fspaces"$"sp_pc_coord" #species coordinates
+
+
+# Test correlation between functional axes and traits
+tr_faxes<-mFD::traits.faxes.cor( sp_tr= divf, sp_faxes_coord = sp_faxes_coord[ , c("PC1", "PC2","PC3", "PC4" )],plot = TRUE)  #4 axis
+
+# plot correlations
+tr_faxes$"tr_faxes_stat"[which(tr_faxes$"tr_faxes_stat"$"p.value" < 0.05), ]
+tr_faxes$"tr_faxes_plot"
+
+write.csv(tr_faxes$tr_faxes_stat, "PcsCorrelations.csv")
+
+plot(fspaces_quality$details_fspaces$dendro)
+plot(fspaces_quality4$details_fspaces$dendro)
+Ftree<-fspaces_quality$details_fspaces$dendro
+class(Ftree)
+
+
+
+#salvar dendograma funcional  
+SnCFT<-as.phylo(fspaces_quality$details_fspaces$dendro)
+write.tree(phy=SnCFT, file="ChacoSnFT_tree.newick")
+
+SnCFT4<-as.phylo(fspaces_quality4$details_fspaces$dendro)#árvore leve
+write.tree(phy=SnCFT, file="ChacoSnFT_tree4.newick")
+
+
+#sesmpd current
+# Load presence-absence data in the wide format:
+PAM_Wide<-fread(file = file.choose(), stringsAsFactors=FALSE, encoding="UTF-8")
+head(PAM_Wide[,1:10])
+
+# Load functional dendrogram:
+FuncTree<-ape::read.tree(file.choose()) # check also read.tree function for other formats.
+FuncTree$tip.label[1:10]
+plot(FuncTree)
+
+# Compute the mean pairwise functional distance for species in a sample:
+FuncStruct_tree<-picante::ses.mpd(samp = PAM_Wide[,-1],
+                                  dis = cophenetic(FuncTree), # it can also be computed with directly with distance matrix
+                                  null.model = "taxa.labels",
+                                  runs = 1000) # ~15 minutes, ideally 10K
+
+summary(FuncStruct_tree)
+write.csv(FuncStruct_tree, "Sesmpd_functional.csv")
+
+#For future
+# Load presence-absence data in the wide format:
+PAM_Fut<-fread(file = file.choose(), stringsAsFactors=FALSE, encoding="UTF-8")
+head(PAM_Fut[,1:10])
+comF<-PAM_Wide[,-c(1:3)]
+
+# Compute the mean pairwise functional distance for species in a sample:
+futureFuncStruct_tree<-picante::ses.mpd(samp = PAM_Wide[,-c(1:3)],
+                                        dis = cophenetic(FuncTree), # it can also be computed with directly with distance matrix
+                                        null.model = "taxa.labels",
+                                        runs = 1000) # ~15 minutes, ideally 10K
+
+summary(futureFuncStruct_tree)
+write.csv(futureFuncStruct_tree, "futureSesmpd_functional.csv")
+
+
+# Compute other the functional diversity metrics:
+#Deixar as mesmas espécies, na mesma ordem, nas duas matrizes
+match(row.names(sp_faxes_coord), colnames(PAM_Wide[,-1]))
+match(row.names(sp_faxes_coord)[-c(4,6,7,8,10,11,13,18,40,42,45,47,95,98,109,110,117,120,128,135,138)], colnames(PAM_Wide[,-1]))
+FuncPCoa4<-sp_faxes_coord[-c(4,6,7,8,10,11,13,18,40,42,45,47,95,98,109,110,117,
+                             120,128,135,138) , c("PC1", "PC2","PC3", "PC4" )]
+summary(FuncPCoa4)
+row.names(FuncPCoa4)
+comC<-PAM_Wide[,-1]
+colnames(comC)
+match(row.names(FuncPCoa4), colnames(comC))
+
+df_novo <- FuncPCoa4[c(1:8, 10:13,9,14:117), ]
+match(row.names(df_novo), colnames(comC))
+FuncPCoa4<-df_novo
+summary(comC)
+match(row.names(FuncPCoa4), colnames(comC))
+match(colnames(comC),row.names(FuncPCoa4))
+dim(FuncPCoa4)
+dim(comC)
+
+
+FD_Output_current <- FD::dbFD(x = FuncPCoa4[-c(14,59,63,98,113),], # trait dataset or species-species distance matrix
+                              a = as.matrix(comC[,-c(14,59,63,98,113)]), # presence-absence matrix or abundance data
+                              w.abun = FALSE, # weight by relative abundance (require abundance data)
+                              stand.x = FALSE, # z-transform traits
+                              calc.FRic = TRUE, # calculate functional richness (convex-hull volume)
+                              stand.FRic = TRUE, # standardize between 0-1 ( = FRic / Global FRic)
+                              calc.CWM = TRUE, # compute community weighted means (CWM) of trait values
+                              calc.FDiv = FALSE, # functional divergence (require abundance data)
+                              messages = TRUE
+)
+
+#future
+match(row.names(FuncPCoa4)[-c(1,2)], colnames(comF))
+match(colnames(comF),row.names(FuncPCoa4)[-c(1,2)])
+
+summary(comF)
+
+FD_Output_future <- FD::dbFD(x = FuncPCoa4[-c(1,2,14,59,63,98,113),], # trait dataset or species-species distance matrix
+                             a = as.matrix(comF[,-c(12,57,61,96,111)]), # presence-absence matrix or abundance data
+                             w.abun = FALSE, # weight by relative abundance (require abundance data)
+                             stand.x = FALSE, # z-transform traits
+                             calc.FRic = TRUE, # calculate functional richness (convex-hull volume)
+                             stand.FRic = TRUE, # standardize between 0-1 ( = FRic / Global FRic)
+                             calc.CWM = TRUE, # compute community weighted means (CWM) of trait values
+                             calc.FDiv = FALSE, # functional divergence (require abundance data)
+                             messages = TRUE
+)
+
+summary(FD_Output_future)
+
+# Merge tables of functional diversity metrics:
+FuncMetrics<-data.frame(
+  SiteID = as.character(row.names(comC)),
+  SppRichnessC = FD_Output_current$nbsp,
+  FRIcC=FD_Output_current$FRic,
+  FEveC=FD_Output_current$FEve,
+  FDisC=FD_Output_current$FDis,
+  
+  SppRichnessF = FD_Output_future$nbsp,
+  FRIcF=FD_Output_future$FRic,
+  FEveF=FD_Output_future$FEve,
+  FDisF=FD_Output_future$FDis,
+  
+  SESMPD = FuncStruct_tree$mpd.obs.z, # tree-based metric
+  SESMPDp= FuncStruct_tree$mpd.obs.p, # associated p-value
+  SESMPD_f = futureFuncStruct_tree$mpd.obs.z, # tree-based metric
+  SESMPDp_f= futureFuncStruct_tree$mpd.obs.p # associated p-value
+  
+)
+sumFuncM<-summary(FuncMetrics)
+write.csv(sumFuncM, "SummaryFunMetrics_SnC.csv")
+write.csv(FuncMetrics, "FunMetrics_SnC.csv")
+write.csv(FD_Output_current$CWM, "PCoA_meanC.csv")
+write.csv(FD_Output_future$CWM, "PCoA_meanF.csv")
+
+
+##Calcular indices pro futuro, mudando matrix de ocorrencia
+FD_Output_current <- FD::dbFD(x = FuncPCoa4[-c(14,59,63,98,113),], # trait dataset or species-species distance matrix
+                              a = as.matrix(comC[,-c(14,59,63,98,113)]), # presence-absence matrix or abundance data
+                              w.abun = FALSE, # weight by relative abundance (require abundance data)
+                              stand.x = FALSE, # z-transform traits
+                              calc.FRic = TRUE, # calculate functional richness (convex-hull volume)
+                              stand.FRic = TRUE, # standardize between 0-1 ( = FRic / Global FRic)
+                              calc.CWM = TRUE, # compute community weighted means (CWM) of trait values
+                              calc.FDiv = FALSE, # functional divergence (require abundance data)
+                              messages = TRUE
+)
