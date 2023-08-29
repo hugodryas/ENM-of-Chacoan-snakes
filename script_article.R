@@ -36,7 +36,7 @@ dir.create("Project Folder/Projection Folder", showWarnings = F)
 
 # Step 1: BUILD ECOLOGICAL NICHE MODELS (ENM) FOR THE TARGET SPECIES
 ########################################################################################################################
-# Paso 1: CONSTRUIR MODELOS DE NICHO ECOL”GICO (ENM) PARA LAS ESPECIES
+# Paso 1: CONSTRUIR MODELOS DE NICHO ECOL√ìGICO (ENM) PARA LAS ESPECIES
 rm(list=ls()); gc()
 
 # Load species occurrence data:
@@ -58,7 +58,7 @@ ENMTML(
   imp_var = FALSE, # assess variable importance
   sp_accessible_area = c(method='BUFFER', type='1'), #  restrict for each species the accessible area (current time)
   pseudoabs_method=c(method="RND"), # pseudo-absence allocation method
-  pres_abs_ratio = 0.5, #  presence-absence ratio
+  pres_abs_ratio = 1, #  presence-absence ratio
   part=c(method='BOOT', replicates='2', proportion='0.7'), # cross-validation partition method
   save_part = FALSE, # save results for individual partition folds
   save_final = TRUE,
@@ -233,7 +233,7 @@ writeOGR(grid_cells, "Shapefiles", "grid_cells", driver="ESRI Shapefile", overwr
 
 # Step 3: COMPUTE THE ENSEMBLE ENM OUTPUTS ACROSS GLOBAL CLIMATE PROJECTIONS
 ########################################################################################################################
-# Paso 3: CALCULE LOS RESULTADOS DEL ENSEMBLE ENM A TRAV…S DE LAS PROYECCIONES CLIM¡TICAS
+# Paso 3: CALCULE LOS RESULTADOS DEL ENSEMBLE ENM A TRAV√âS DE LAS PROYECCIONES CLIM√ÅTICAS
 rm(list=ls()); gc()
 
 # Create a raster stack with species distributions for the future climate (ssp5 & RCP8.5):
@@ -472,7 +472,7 @@ data.table::fwrite(PAM_Future, "Datasets/PAM_FutureTime.csv")
 
 # Step 5: COMPUTE THE SPECIES GEOGRAPHICAL RANGE SHIFTS BETWEEN TEMPORALLY DIFFERENT SCENARIOS
 ########################################################################################################################
-# Paso 5: CALCULAR LOS CAMBIOS EN EL ALCANCE GEOGR¡FICO DE LAS ESPECIES ENTRE ESCENARIOS TEMPORALMENTE DIFERENTES
+# Paso 5: CALCULAR LOS CAMBIOS EN EL ALCANCE GEOGR√ÅFICO DE LAS ESPECIES ENTRE ESCENARIOS TEMPORALMENTE DIFERENTES
 rm(list=ls()); gc()
 
 # Check the raster files produced to represent species distributions as binary maps (current time):
@@ -633,7 +633,7 @@ beepr::beep(8)
 
 # Step 6: COMPUTE BETA-DIVERSITY METRICS USING THE PRESENCE-ABSENCE MATRIX OF THE CURRENT SCENARIO
 ########################################################################################################################
-# Paso 6: CALCULE LAS M…TRICAS DE BETA-DIVERSIDAD UTILIZANDO LA MATRIZ DE PRESENCIA-AUSENCIA DEL ESCENARIO ACTUAL
+# Paso 6: CALCULE LAS M√âTRICAS DE BETA-DIVERSIDAD UTILIZANDO LA MATRIZ DE PRESENCIA-AUSENCIA DEL ESCENARIO ACTUAL
 rm(list=ls()); gc()
 
 # Load the database:
@@ -764,7 +764,7 @@ BetaCurrent[BetaCurrent$Beta.JAC==0,]$Beta.Ratio<-0 # manually set values to zer
 
 # Step 7: COMPUTE BETA-DIVERSITY METRICS BETWEEN CURRENT AND FUTURE SCENARIOS
 ########################################################################################################################
-# Paso 7: CALCULE LAS M…TRICAS DE DIVERSIDAD BETA ENTRE ESCENARIOS ACTUALES Y FUTUROS
+# Paso 7: CALCULE LAS M√âTRICAS DE DIVERSIDAD BETA ENTRE ESCENARIOS ACTUALES Y FUTUROS
 rm(list=setdiff(ls(), c("BetaCurrent", "CellsToUse", "intersection", "PAM_Current", "window_size")))
 
 # Load the PAM for the future climate and remove cells outside study area:
@@ -1126,7 +1126,7 @@ fwrite(SpatioTemporalPhyloBeta, "Datasets/SpatioTemporalPhyloBeta.csv")
 
 # Step 10 - BUILD BARPLOTS OF EXPECTED CHANGES IN SPECIES RANGE AND ASSEMBLAGE GENERALISM 
 ##########################################################################################################################
-# Paso 10 - CONSTRUIR GR¡FICOS DE BARRAS DE CAMBIOS ESPERADOS EN LA GAMA DE ESPECIES Y EL GENERALISMO DE CONJUNTO 
+# Paso 10 - CONSTRUIR GR√ÅFICOS DE BARRAS DE CAMBIOS ESPERADOS EN LA GAMA DE ESPECIES Y EL GENERALISMO DE CONJUNTO 
 rm(list=ls()); gc() # clean the workspace
 
 ### BARPLOT 1 - SPECIES RANGE SHIFTS
@@ -1345,20 +1345,20 @@ library(ape)
 library(picante)
 
 
-#localidade x espÈcie
+#localidade x esp√©cie
 PAM_Wide<-fread(file = file.choose(), stringsAsFactors=FALSE, encoding="UTF-8")
 head(PAM_Wide[,1:10])
 
 
-#tabela de atributo das espÈcies
+#tabela de atributo das esp√©cies
 divf <- read.table(file.choose(), sep = "\t", header = T)#LISTA DE ATRIBUTOS
 head(divf)
 summary(divf)
 row.names(divf)
 colnames(divf)
 
-#DescriÁ„o tipo das vari·veis de atributos
-tipovar <- read.table(file.choose(), sep = "\t", header = T)#Tipo de vari·vel
+#Descri√ß√£o tipo das vari√°veis de atributos
+tipovar <- read.table(file.choose(), sep = "\t", header = T)#Tipo de vari√°vel
 summary(tipovar)
 tipovar
 
@@ -1411,7 +1411,7 @@ class(Ftree)
 SnCFT<-as.phylo(fspaces_quality$details_fspaces$dendro)
 write.tree(phy=SnCFT, file="ChacoSnFT_tree.newick")
 
-SnCFT4<-as.phylo(fspaces_quality4$details_fspaces$dendro)#·rvore leve
+SnCFT4<-as.phylo(fspaces_quality4$details_fspaces$dendro)#√°rvore leve
 write.tree(phy=SnCFT, file="ChacoSnFT_tree4.newick")
 
 
@@ -1451,7 +1451,7 @@ write.csv(futureFuncStruct_tree, "futureSesmpd_functional.csv")
 
 
 # Compute other the functional diversity metrics:
-#Deixar as mesmas espÈcies, na mesma ordem, nas duas matrizes
+#Deixar as mesmas esp√©cies, na mesma ordem, nas duas matrizes
 match(row.names(sp_faxes_coord), colnames(PAM_Wide[,-1]))
 match(row.names(sp_faxes_coord)[-c(4,6,7,8,10,11,13,18,40,42,45,47,95,98,109,110,117,120,128,135,138)], colnames(PAM_Wide[,-1]))
 FuncPCoa4<-sp_faxes_coord[-c(4,6,7,8,10,11,13,18,40,42,45,47,95,98,109,110,117,
